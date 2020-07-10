@@ -3,27 +3,19 @@ package com.yskj.flink.task;
 import cn.hutool.crypto.digest.MD5;
 import cn.hutool.dfa.WordTree;
 import com.alibaba.fastjson.JSON;
-import com.google.inject.internal.util.$Strings;
 import com.yskj.flink.entity.SensitiveWord;
-import com.yskj.flink.entity.SensitiveWxChat;
-import com.yskj.flink.entity.WxChatHistoryCloud;
-import com.yskj.flink.util.HBaseClient;
+import com.yskj.flink.util.HBaseClientUtils;
 import com.yskj.flink.util.HBaseTableColumn;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.net.ftp.parser.MacOsPeterFTPEntryParser;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.state.BroadcastState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.contrib.streaming.state.RocksDBStateBackend;
-import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
-import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
@@ -194,7 +186,7 @@ public class SensitiveAlarmTask {
                      */
                     private void writeHBaseSensitive(Map<String, String> map) throws IOException {
                         String rowKey = getRowKey(map);
-                        HBaseClient.writeRecord(HBaseTableColumn.SEN_WXCHAT_TABLE, rowKey, HBaseTableColumn.SEN_WXCHAT_FAMILY, map);
+                        HBaseClientUtils.writeRecord(HBaseTableColumn.SEN_WXCHAT_TABLE, rowKey, HBaseTableColumn.SEN_WXCHAT_FAMILY, map);
                     }
 
                     /**

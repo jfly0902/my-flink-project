@@ -1,7 +1,7 @@
 package com.yskj.flink.function;
 
 import cn.hutool.crypto.digest.MD5;
-import com.yskj.flink.util.HBaseClient;
+import com.yskj.flink.util.HBaseClientUtils;
 import com.yskj.flink.util.HBaseTableColumn;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 
@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.SimpleFormatter;
 
 /**
  * @Author: xiang.jin
@@ -21,7 +20,7 @@ public class HBaseDWSinkFunction extends RichSinkFunction<Map<String, String>> {
     @Override
     public void close() throws Exception {
         super.close();
-        HBaseClient.close();
+        HBaseClientUtils.close();
     }
 
     @Override
@@ -36,7 +35,7 @@ public class HBaseDWSinkFunction extends RichSinkFunction<Map<String, String>> {
             result.put("count", value.get(key));
         }
         String rowKey = getRowKey(result);
-        HBaseClient.writeRecord(HBaseTableColumn.DW_WXCHAT_TABLE, rowKey, HBaseTableColumn.DW_WXCHAT_FAMILY, result);
+        HBaseClientUtils.writeRecord(HBaseTableColumn.DW_WXCHAT_TABLE, rowKey, HBaseTableColumn.DW_WXCHAT_FAMILY, result);
     }
 
     private String getRowKey(Map<String, String> value) {

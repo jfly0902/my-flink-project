@@ -2,7 +2,7 @@ package com.yskj.flink.function;
 
 import cn.hutool.crypto.digest.MD5;
 import com.alibaba.fastjson.JSON;
-import com.yskj.flink.util.HBaseClient;
+import com.yskj.flink.util.HBaseClientUtils;
 import com.yskj.flink.util.HBaseTableColumn;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.async.ResultFuture;
@@ -20,13 +20,13 @@ public class WxChat2HBaseMapFunction extends RichAsyncFunction<String, Map<Strin
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-        HBaseClient.open(HBaseTableColumn.ODS_WXCHAT_TABLE, HBaseTableColumn.ODS_WXCHAT_FAMILY);
+        HBaseClientUtils.open(HBaseTableColumn.ODS_WXCHAT_TABLE, HBaseTableColumn.ODS_WXCHAT_FAMILY);
     }
 
     @Override
     public void close() throws Exception {
         super.close();
-        HBaseClient.close();
+        HBaseClientUtils.close();
     }
 
     @Override
@@ -52,7 +52,7 @@ public class WxChat2HBaseMapFunction extends RichAsyncFunction<String, Map<Strin
         String rowKey = getRowKey(jsonMap);
 
         // 将数据写入Hbase中
-        HBaseClient.writeRecord(HBaseTableColumn.ODS_WXCHAT_TABLE, rowKey, HBaseTableColumn.ODS_WXCHAT_FAMILY, jsonMap);
+        HBaseClientUtils.writeRecord(HBaseTableColumn.ODS_WXCHAT_TABLE, rowKey, HBaseTableColumn.ODS_WXCHAT_FAMILY, jsonMap);
         // 新的MAP
         Map<String, String> newMap = new HashMap<>();
         newMap.put("wxId", jsonMap.get("wxId"));

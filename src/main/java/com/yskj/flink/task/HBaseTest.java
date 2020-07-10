@@ -1,43 +1,21 @@
 package com.yskj.flink.task;
 
 
-import cn.hutool.crypto.digest.MD5;
-import com.alibaba.fastjson.JSON;
-import com.yskj.flink.entity.WxChatHistoryCloud;
-import com.yskj.flink.util.HBaseClient;
 import lombok.SneakyThrows;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.runtime.checkpoint.*;
-import org.apache.flink.runtime.checkpoint.savepoint.Savepoint;
 import org.apache.flink.runtime.state.*;
 import org.apache.flink.runtime.state.filesystem.FileStateHandle;
-import org.apache.flink.state.api.runtime.SavepointLoader;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
-import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.util.Collector;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.util.MD5Hash;
-import org.rocksdb.WriteBatch;
-import sun.security.rsa.RSASignature;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.text.DateFormat;
-import java.text.FieldPosition;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 
 

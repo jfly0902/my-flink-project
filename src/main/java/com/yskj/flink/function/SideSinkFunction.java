@@ -1,7 +1,7 @@
 package com.yskj.flink.function;
 
 import cn.hutool.crypto.digest.MD5;
-import com.yskj.flink.util.HBaseClient;
+import com.yskj.flink.util.HBaseClientUtils;
 import com.yskj.flink.util.HBaseTableColumn;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
@@ -19,7 +19,7 @@ public class SideSinkFunction implements SinkFunction<Map<String, String>> {
     @Override
     public void invoke(Map<String, String> value, Context context) throws Exception {
         String rowKey = getRowKey(value);
-        HBaseClient.writeRecord(HBaseTableColumn.SIDE_WXCHAT_TABLE, rowKey, HBaseTableColumn.SIDE_WXCHAT_FAMILY, value);
+        HBaseClientUtils.writeRecord(HBaseTableColumn.SIDE_WXCHAT_TABLE, rowKey, HBaseTableColumn.SIDE_WXCHAT_FAMILY, value);
     }
 
     private String getRowKey(Map<String, String> value) {

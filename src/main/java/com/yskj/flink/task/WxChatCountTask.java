@@ -51,14 +51,14 @@ public class WxChatCountTask {
                                 record.getString("wxId"),
                                 record.getString("talker"),
                                 record.getString("roomMsgWxId"),
-                                record.getString("chatCreateTime"),
+                                record.getLong("chatCreateTime"),
                                 record.getString("type"));
                     }
                 }).uid("wxChat_json_HBase_id")
                 .assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<WxChat>(Time.minutes(45)) {
                     @Override
                     public long extractTimestamp(WxChat wxChat) {
-                        return Long.parseLong(wxChat.f3);
+                        return wxChat.f3;
                     }
                 }).process(new ProcessFunction<WxChat, WxChat>() {
                     @Override

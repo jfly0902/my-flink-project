@@ -2,7 +2,6 @@ package com.yskj.flink.function;
 
 import com.google.gson.Gson;
 import com.yskj.flink.entity.RoomMember;
-import com.yskj.flink.util.HBaseClient;
 import org.apache.flink.api.common.functions.MapFunction;
 
 /**

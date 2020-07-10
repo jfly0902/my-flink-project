@@ -2,12 +2,9 @@ package com.yskj.flink.function;
 
 import cn.hutool.crypto.digest.MD5;
 import com.alibaba.fastjson.JSON;
-import com.yskj.flink.util.HBaseClient;
+import com.yskj.flink.util.HBaseClientUtils;
 import com.yskj.flink.util.HBaseTableColumn;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.streaming.api.functions.async.ResultFuture;
-import org.apache.flink.streaming.api.functions.async.RichAsyncFunction;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -28,7 +25,7 @@ public class KafkaJson2HBaseFunction implements MapFunction<String, Map<String, 
         // 获得rowKey
         String rowKey = getRowKey(jsonMap);
 
-        HBaseClient.writeRecord(HBaseTableColumn.ODS_WXCHAT_TABLE, rowKey, HBaseTableColumn.ODS_WXCHAT_FAMILY, jsonMap);
+        HBaseClientUtils.writeRecord(HBaseTableColumn.ODS_WXCHAT_TABLE, rowKey, HBaseTableColumn.ODS_WXCHAT_FAMILY, jsonMap);
 
         Map<String, String> newMap = new ConcurrentHashMap<>();
         newMap.put("wxId", jsonMap.get("wxId"));

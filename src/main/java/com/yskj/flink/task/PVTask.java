@@ -6,9 +6,11 @@ import com.yskj.flink.entity.WxChat;
 import com.yskj.flink.function.*;
 import lombok.SneakyThrows;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.java.typeutils.PojoTypeInfo;
 import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.TimeCharacteristic;
@@ -20,11 +22,14 @@ import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindo
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.triggers.ContinuousEventTimeTrigger;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
+import org.apache.flink.table.functions.aggfunctions.CountAggFunction;
+import org.apache.flink.util.OutputTag;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Util.println;
 
@@ -46,6 +51,11 @@ public class PVTask {
         env.setParallelism(1);
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
+        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
+                3,        // 重启次数
+                org.apache.flink.api.common.time.Time.of(5, TimeUnit.SECONDS)  // 发生异常 重启的时间间隔
+        ));
+
         env.enableCheckpointing(18000L, CheckpointingMode.EXACTLY_ONCE);
         //CheckpointConfig config = env.getCheckpointConfig();
         /*config.setMaxConcurrentCheckpoints(3);
@@ -59,14 +69,14 @@ public class PVTask {
 
         // OutputTag<Map<String, String>> wxChatTag = new OutputTag<>("wxChat-state", TypeInformation.of(new TypeHint<Map<String,String>>(){}));
 
-        //OutputTag<WxChat> wxChatTag = new OutputTag<>("wxChat-state", PojoTypeInfo.of(WxChat.class));
+        OutputTag<WxChat> wxChatTag = new OutputTag<>("wxChat-state", PojoTypeInfo.of(WxChat.class));
 
         Properties properties = new Properties();
-        properties.setProperty("bootstrap.servers", "192.168.180.234:9092,192.168.180.235:9092,192.168.180.238:9092");
-        properties.setProperty("zookeeper.connect", "192.168.180.234:2181,192.168.180.235:2181,192.168.180.238:2181");
+        properties.setProperty("bootstrap.servers", "192.168.184.244:9092,192.168.184.243:9092,192.168.184.241:9092");
+        properties.setProperty("zookeeper.connect", "192.168.184.244:2181,192.168.184.243:2181,192.168.184.241:2181");
         properties.setProperty("group.id", "wxChat");
 
-        String topic = "test";
+        String topic = "msg";
         FlinkKafkaConsumer<String> kafkaConsumer = new FlinkKafkaConsumer<>(topic, new SimpleStringSchema(), properties);
         //kafkaConsumer.setStartFromGroupOffsets();
         kafkaConsumer.setStartFromLatest();
@@ -81,7 +91,7 @@ public class PVTask {
                                 record.getString("wxId"),
                                 record.getString("talker"),
                                 record.getString("roomMsgWxId"),
-                                record.getString("chatCreateTime"),
+                                record.getLong("chatCreateTime"),
                                 record.getString("type"));
                     }
                 })
@@ -96,7 +106,7 @@ public class PVTask {
                         SimpleDateFormat sd = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         String date = sd.format(new Date(timestamp));
                         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-                        long time = simpleDateFormat.parse(wxChat.getChatCreateTime()).getTime();
+                        long time = wxChat.getChatCreateTime();
                         println("==============> wxChat:" + wxChat + "; 时间：" + wxChat.getChatCreateTime()
                                 + "; 获取到时间：" + time + "; 当前的 waterMark : " + timestamp + "; 当前的时间是： " + date);
                         return time;
@@ -162,7 +172,7 @@ public class PVTask {
                 /**
                  * 测试 offset 加上与不加的区别
                  */
-                .window(TumblingEventTimeWindows.of(Time.days(1)))
+                .window(TumblingEventTimeWindows.of(Time.days(1), Time.hours(-8)))
                 // 允许数据延迟的时间是
                 // 允许延迟的时间是 5s
                 //.allowedLateness(Time.seconds(5))
@@ -313,7 +323,7 @@ public class PVTask {
                  *
                  *
                  */
-                //.sideOutputLateData(wxChatTag)
+                .sideOutputLateData(wxChatTag)
 
                 /**
                  *>{"wxId":"wxid_besm9vc3zlju22","talker":"9547148812@chatroom","roomMsgWxId":"wxid_c8giongn8k7v22","chatCreateTime":"2020-05-11 17:11:11"}
@@ -340,17 +350,19 @@ public class PVTask {
                 // 因为 waterMark 延迟5s 因此第二次触发的时间还是 2020-05-11 17:11:35
                 // 因此第一次和第二次时间相隔10s触发
                 // 以此类推可以得到后续每次触发的数据
+                // PurgingTrigger.of()  适用于 只能append的数据库
                 .trigger(ContinuousEventTimeTrigger.of(Time.seconds(10)))
                 //.evictor(TimeEvictor.of(Time.seconds(0), true))
-                .aggregate(new WxChatAggFunction(), new ResultWxChatFunction())
+                //.aggregate(new WxChatAggFunction(), new ResultWxChatFunction())
+                .aggregate(new CountAggWeChatFunction(), new ResultWxChatFunction())
                 //.process(new WxChatStatisticsFunction())
-                .uid("agg_wxChat_ID")
-                .process(new WxChatProcessFunction())
-                .uid("process_wxChat_ID");
+                .uid("agg_wxChat_ID");
+                //.process(new WxChatProcessFunction())
+                //.uid("process_wxChat_ID");
 
 
                 streamOperator.print("dw: =====> ");
-         streamOperator.addSink(new HBaseSinkFunction()).uid("wxChat_dwHBase_id");
+         // streamOperator.addSink(new HBaseSinkFunction()).uid("wxChat_dwHBase_id");
 
 
         //streamOperator.getSideOutput(wxChatTag).print("late data:");

@@ -59,7 +59,7 @@ public class AlertCEPTask {
                                 record.getString("wxId"),
                                 record.getString("talker"),
                                 record.getString("roomMsgWxId"),
-                                record.getString("chatCreateTime"),
+                                record.getLong("chatCreateTime"),
                                 record.getString("type"));
                     }
                 }).uid("alert_map_transformation_id")
@@ -68,7 +68,7 @@ public class AlertCEPTask {
                     @Override
                     public long extractTimestamp(WxChat wxChat) {
                         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-                        long time = simpleDateFormat.parse(wxChat.f3).getTime();
+                        long time = wxChat.f3;
                         return time;
                     }
                 }).uid("alert_waterMark_id")
@@ -95,16 +95,16 @@ public class AlertCEPTask {
             @Override
             public boolean filter(WxChat wxChat) throws Exception {
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-                long time = simpleDateFormat.parse(wxChat.getChatCreateTime()).getTime();
-                long flag = simpleDateFormat.parse(wxChat.getChatCreateTime().substring(0, 10) + " 01:00:00").getTime();
+                long time = wxChat.getChatCreateTime();
+                long flag = wxChat.getChatCreateTime();
                 return time >= flag;
             }
         }).followedBy("follow").where(new SimpleCondition<WxChat>() {
             @Override
             public boolean filter(WxChat wxChat) throws Exception {
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-                long time = simpleDateFormat.parse(wxChat.getChatCreateTime()).getTime();
-                long flag = simpleDateFormat.parse(wxChat.getChatCreateTime().substring(0, 10) + " 01:00:00").getTime();
+                long time = wxChat.getChatCreateTime();
+                long flag = wxChat.getChatCreateTime();
                 return time >= flag;
             }
         }).times(9).within(Time.hours(5));

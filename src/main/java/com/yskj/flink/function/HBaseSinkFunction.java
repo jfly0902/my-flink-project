@@ -1,7 +1,7 @@
 package com.yskj.flink.function;
 
 import cn.hutool.crypto.digest.MD5;
-import com.yskj.flink.util.HBaseClient;
+import com.yskj.flink.util.HBaseClientUtils;
 import com.yskj.flink.util.HBaseTableColumn;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
@@ -18,13 +18,13 @@ public class HBaseSinkFunction extends RichSinkFunction<Map<String, String>> {
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-        HBaseClient.open(HBaseTableColumn.DW_WXCHAT_TABLE, HBaseTableColumn.DW_WXCHAT_FAMILY);
+        HBaseClientUtils.open(HBaseTableColumn.DW_WXCHAT_TABLE, HBaseTableColumn.DW_WXCHAT_FAMILY);
     }
 
     @Override
     public void close() throws Exception {
         super.close();
-        HBaseClient.close();
+        HBaseClientUtils.close();
     }
 
     @Override
@@ -35,7 +35,7 @@ public class HBaseSinkFunction extends RichSinkFunction<Map<String, String>> {
                 value.keySet()) {
             map.put(key, value.get(key));
         }
-        HBaseClient.writeRecord(HBaseTableColumn.DW_WXCHAT_TABLE, rowKey, HBaseTableColumn.DW_WXCHAT_FAMILY, map);
+        HBaseClientUtils.writeRecord(HBaseTableColumn.DW_WXCHAT_TABLE, rowKey, HBaseTableColumn.DW_WXCHAT_FAMILY, map);
     }
 
 
